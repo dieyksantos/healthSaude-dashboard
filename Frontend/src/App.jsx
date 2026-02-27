@@ -15,6 +15,12 @@ export default function App() {
   const [modalOpen, setModalOpen] = useState(false);
   const [editing, setEditing] = useState(null);
   const [planId, setPlanId] = useState(null);
+  const [bootStuck, setBootStuck] = useState(false);
+
+useEffect(() => {
+  const t = setTimeout(() => setBootStuck(true), 20000);
+  return () => clearTimeout(t);
+}, []);
 
   const { records, loading, isDemoMode, load, add, edit, remove } = useHealth();
   const { toast, showToast, dismissToast } = useToast();
@@ -112,47 +118,41 @@ export default function App() {
 
   /* ================= LOADING ================= */
 
-  if (loading) {
-    return (
-      <div
-        style={{
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          height: "100vh",
-          color: "var(--muted)",
-        }}
-      >
-        Carregando...
-      </div>
-    );
-  }
+ if (loading && !bootStuck) {
+  return (
+    <div
+      style={{
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        height: "100vh",
+        color: "var(--muted)",
+      }}
+    >
+      Carregando...
+    </div>
+  );
+}
 
-  /* ================= RENDER ================= */
+if (loading && bootStuck) {
 
   return (
-    <div className="layout">
-      <Sidebar activePage={page} onNavigate={setPage} onNewRecord={openNew} />
 
-      <main className="main-content">
-        {page === "dashboard" && (
-          <>
-            <Dashboard records={records} onNewRecord={openNew} />
-
-            {/* 🔥 BOTÃO PLANO */}
-            <div style={{ marginTop: "20px", position: "relative", zIndex: 10 }}>
-              <button
-                type="button"
-                onClick={generatePlan}
-                style={{
-                  background: "#00e5a0",
-                  padding: "10px",
-                  border: "none",
-                  cursor: "pointer",
-                }}
-              >
-                🚀 Gerar Plano de Treino e Alimentação
-              </button>
+<div style={{ padding: 20 }}>
+      <h3>Backend demorou para responder</h3>
+      <p>Abra o backend para acordar e tente de novo:</p>
+      <p>
+        <a href="https://health-dashboard-4qxq.onrender.com/docs" target="_blank" rel="noreferrer">
+          Abrir /docs do backend
+        </a>
+      </p>
+      <button
+        type="button"
+        onClick={() => window.location.reload()}
+        style={{ background: "#00e5a0", padding: "10px", border: "none", cursor: "pointer" }}
+      >
+        Recarregar
+      </button>
 
               {planId && (
                 <button

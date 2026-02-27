@@ -1,30 +1,28 @@
 const BACKEND = "https://health-dashboard-4qxq.onrender.com";
-const TIMEOUT_MS = 15000;
+const TIMEOUT_MS = 12000;
 
 async function fetchWithTimeout(url, options = {}, timeoutMs = TIMEOUT_MS) {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), timeoutMs);
 
   try {
-    return await fetch(url, { ...options, signal: controller.signal });
+    const res = await fetch(url, { ...options, signal: controller.signal });
+    return res;
   } finally {
     clearTimeout(timer);
   }
 }
 
-async function parseJsonOrText(res) {
+async function parseJsonOrThrow(res) {
   const text = await res.text();
   if (!res.ok) throw new Error(text || `HTTP ${res.status}`);
-  try {
-    return JSON.parse(text);
-  } catch {
-    return text;
-  }
+  return text ? JSON.parse(text) : null;
 }
 
 export async function fetchRecords() {
+  console.log("🌐 fetchRecords ->", `${BACKEND}/health/`);
   const res = await fetchWithTimeout(`${BACKEND}/health/`, { method: "GET" });
-  return parseJsonOrText(res);
+  return parseJsonOrThrow(res);
 }
 
 export async function createRecord(payload) {
@@ -33,7 +31,7 @@ export async function createRecord(payload) {
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(payload),
   });
-  return parseJsonOrText(res);
+  return parseJsonOrThrow(res);
 }
 
 export async function updateRecord(id, payload) {
@@ -42,12 +40,12 @@ export async function updateRecord(id, payload) {
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(payload),
   });
-  return parseJsonOrText(res);
+  return parseJsonOrThrow(res);
 }
 
 export async function deleteRecord(id) {
   const res = await fetchWithTimeout(`${BACKEND}/health/${id}`, {
     method: "DELETE",
   });
-  return parseJsonOrText(res);
+  return parseJsonOrThrow(res);
 }

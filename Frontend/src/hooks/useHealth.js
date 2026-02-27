@@ -8,18 +8,24 @@ export function useHealth() {
   const [isDemoMode, setIsDemoMode] = useState(false);
 
   const load = useCallback(async () => {
-    setLoading(true);
-    try {
-      const data = await fetchRecords();
-      setRecords(data);
-      setIsDemoMode(false);
-    } catch {
-      // API unavailable — fall back to demo data
-      setRecords(DEMO_DATA);
-      setIsDemoMode(true);
-    } finally {
-      setLoading(false);
-    }
+  console.log("🟡 load(): start");
+  setLoading(true);
+
+  try {
+    const data = await fetchRecords();
+    console.log("🟢 load(): ok", Array.isArray(data) ? data.length : data);
+    setRecords(data);
+    setIsDemoMode(false);
+  } catch (err) {
+    console.error("🔴 load(): fail", err);
+    setRecords(DEMO_DATA);
+    setIsDemoMode(true);
+  } finally {
+    console.log("🟣 load(): finally -> setLoading(false)");
+    setLoading(false);
+  }
+
+    
   }, []);
 
   const add = useCallback(async (formData) => {
