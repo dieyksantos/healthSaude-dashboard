@@ -1,42 +1,53 @@
-const BASE = ""; // vazio de propósito (proxy do Vite cuida)
+const BACKEND = "https://health-dashboard-4qxq.onrender.com";
+const TIMEOUT_MS = 15000;
 
-async function request(path, options = {}) {
-  const res = await fetch(`${BASE}${path}`, {
-    headers: { "Content-Type": "application/json", ...(options.headers || {}) },
-    ...options,
-  });
+async function fetchWithTimeout(url, options = {}, timeoutMs = TIMEOUT_MS) {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
 
-  if (!res.ok) {
-    const txt = await res.text();
-    throw new Error(txt || `Erro HTTP ${res.status}`);
+  try {
+    return await fetch(url, { ...options, signal: controller.signal });
+  } finally {
+    clearTimeout(timer);
   }
-
-  // Se não tiver body, evita erro
-  const contentType = res.headers.get("content-type") || "";
-  if (contentType.includes("application/json")) return res.json();
-  return res.text();
 }
 
-export function fetchRecords() {
-  return request("/health/");
+async function parseJsonOrText(res) {
+  const text = await res.text();
+  if (!res.ok) throw new Error(text || `HTTP ${res.status}`);
+  try {
+    return JSON.parse(text);
+  } catch {
+    return text;
+  }
 }
 
-export function createRecord(data) {
-  return request("/health/", {
+export async function fetchRecords() {
+  const res = await fetchWithTimeout(`${BACKEND}/health/`, { method: "GET" });
+  return parseJsonOrText(res);
+}
+
+export async function createRecord(payload) {
+  const res = await fetchWithTimeout(`${BACKEND}/health/`, {
     method: "POST",
-    body: JSON.stringify(data),
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
   });
+  return parseJsonOrText(res);
 }
 
-export function updateRecord(id, data) {
-  return request(`/health/${id}`, {
+export async function updateRecord(id, payload) {
+  const res = await fetchWithTimeout(`${BACKEND}/health/${id}`, {
     method: "PUT",
-    body: JSON.stringify(data),
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
   });
+  return parseJsonOrText(res);
 }
 
-export function deleteRecord(id) {
-  return request(`/health/${id}`, {
+export async function deleteRecord(id) {
+  const res = await fetchWithTimeout(`${BACKEND}/health/${id}`, {
     method: "DELETE",
   });
+  return parseJsonOrText(res);
 }
