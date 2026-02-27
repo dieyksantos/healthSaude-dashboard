@@ -8,10 +8,13 @@ import { useHealth } from "./hooks/useHealth";
 import "./styles/globals.css";
 
 export default function App() {
+
+  const BACKEND = "https://health-dashboard-4qxq.onrender.com";
+
   const [page, setPage] = useState("dashboard");
   const [modalOpen, setModalOpen] = useState(false);
   const [editing, setEditing] = useState(null);
-  const [planId, setPlanId] = useState(null); // ✅ NOVO
+  const [planId, setPlanId] = useState(null);
 
   const { records, loading, isDemoMode, load, add, edit, remove } = useHealth();
   const { toast, showToast, dismissToast } = useToast();
@@ -22,7 +25,7 @@ export default function App() {
 
   useEffect(() => {
     if (isDemoMode) showToast("⚡ Modo demo ativo — API não conectada");
-  }, [isDemoMode]);
+  }, [isDemoMode, showToast]);
 
   /* ================= MODAL ================= */
 
@@ -71,24 +74,41 @@ export default function App() {
   /* ================= PLANO IA ================= */
 
   async function generatePlan() {
-    console.log("🔥 generatePlan chamado"); 
-  try {
-    const res = await fetch("/plan/generate", { method: "POST" });
+    console.log("🔥 generatePlan chamado");
+    showToast("⏳ Gerando plano...");
 
-    if (!res.ok) {
-      const txt = await res.text();
-      throw new Error(txt);
+    try {
+    
+      const res = await fetch(`${BACKEND}/plan/generate`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({}), 
+      });
+
+      const text = await res.text();
+      console.log("📦 status:", res.status);
+      console.log("📦 body:", text);
+
+      if (!res.ok) throw new Error(text || `HTTP ${res.status}`);
+
+      let data;
+      try {
+        data = JSON.parse(text);
+      } catch {
+        throw new Error("Resposta do backend não veio em JSON: " + text);
+      }
+
+      if (!data?.id) {
+        throw new Error("Backend não retornou 'id'. Resposta: " + text);
+      }
+
+      setPlanId(data.id);
+      showToast("🔥 Plano gerado com sucesso");
+    } catch (err) {
+      console.error("❌ generatePlan erro:", err);
+      showToast("❌ Falha ao gerar plano: " + (err?.message || "erro desconhecido"));
     }
-
-    const data = await res.json();
-    setPlanId(data.id);
-
-    showToast("🔥 Plano gerado com sucesso");
-  } catch (err) {
-    console.error(err);
-    showToast("❌ Erro ao gerar plano");
   }
-}
 
   /* ================= LOADING ================= */
 
@@ -112,11 +132,7 @@ export default function App() {
 
   return (
     <div className="layout">
-      <Sidebar
-        activePage={page}
-        onNavigate={setPage}
-        onNewRecord={openNew}
-      />
+      <Sidebar activePage={page} onNavigate={setPage} onNewRecord={openNew} />
 
       <main className="main-content">
         {page === "dashboard" && (
@@ -124,8 +140,9 @@ export default function App() {
             <Dashboard records={records} onNewRecord={openNew} />
 
             {/* 🔥 BOTÃO PLANO */}
-            <div style={{ marginTop: "20px" }}>
+            <div style={{ marginTop: "20px", position: "relative", zIndex: 10 }}>
               <button
+                type="button"
                 onClick={generatePlan}
                 style={{
                   background: "#00e5a0",
@@ -139,16 +156,16 @@ export default function App() {
 
               {planId && (
                 <button
-                    style={{
-                      marginLeft: "10px",
-                      background: "#111827",
-                      color: "#fff",
-                      padding: "10px",
-                      border: "1px solid #00e5a0",
-                      cursor: "pointer",
-    }}
-        onClick={() => window.open(`/plan/${planId}/pdf`, "_blank")
-                  }
+                  type="button"
+                  style={{
+                    marginLeft: "10px",
+                    background: "#111827",
+                    color: "#fff",
+                    padding: "10px",
+                    border: "1px solid #00e5a0",
+                    cursor: "pointer",
+                  }}
+                  onClick={() => window.open(`${BACKEND}/plan/${planId}/pdf`, "_blank")}
                 >
                   🔥 Ver Plano
                 </button>

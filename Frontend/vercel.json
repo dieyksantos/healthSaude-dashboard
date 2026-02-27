@@ -1,12 +1,6 @@
 {
   "rewrites": [
-    {
-      "source": "/plan/:path*",
-      "destination": "https://health-dashboard-4qxq.onrender.com/plan/:path*"
-    },
-    {
-      "source": "/health/:path*",
-      "destination": "https://health-dashboard-4qxq.onrender.com/health/:path*"
-    }
+    { "source": "/plan/(.*)", "destination": "https://health-dashboard-4qxq.onrender.com/plan/$1" },
+    { "source": "/health/(.*)", "destination": "https://health-dashboard-4qxq.onrender.com/health/$1" }
   ]
 }
