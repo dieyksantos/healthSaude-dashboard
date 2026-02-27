@@ -8,7 +8,6 @@ import { useHealth } from "./hooks/useHealth";
 import "./styles/globals.css";
 
 export default function App() {
-
   const BACKEND = "https://health-dashboard-4qxq.onrender.com";
 
   const [page, setPage] = useState("dashboard");
@@ -17,17 +16,17 @@ export default function App() {
   const [planId, setPlanId] = useState(null);
   const [bootStuck, setBootStuck] = useState(false);
 
-useEffect(() => {
-  const t = setTimeout(() => setBootStuck(true), 20000);
-  return () => clearTimeout(t);
-}, []);
-
   const { records, loading, isDemoMode, load, add, edit, remove } = useHealth();
   const { toast, showToast, dismissToast } = useToast();
 
   useEffect(() => {
     load();
   }, [load]);
+
+  useEffect(() => {
+    const t = setTimeout(() => setBootStuck(true), 20000);
+    return () => clearTimeout(t);
+  }, []);
 
   useEffect(() => {
     if (isDemoMode) showToast("⚡ Modo demo ativo — API não conectada");
@@ -59,7 +58,6 @@ useEffect(() => {
         await add(formData);
         showToast("✅ Registro salvo");
       }
-
       closeModal();
     } catch {
       showToast("❌ Erro ao salvar registro");
@@ -80,79 +78,100 @@ useEffect(() => {
   /* ================= PLANO IA ================= */
 
   async function generatePlan() {
-    console.log("🔥 generatePlan chamado");
     showToast("⏳ Gerando plano...");
 
     try {
-    
       const res = await fetch(`${BACKEND}/plan/generate`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({}), 
+        body: JSON.stringify({}),
       });
 
-      const text = await res.text();
-      console.log("📦 status:", res.status);
-      console.log("📦 body:", text);
+      const data = JSON.parse(text);
+    setPlanId(data.id);
 
-      if (!res.ok) throw new Error(text || `HTTP ${res.status}`);
-
-      let data;
-      try {
-        data = JSON.parse(text);
-      } catch {
-        throw new Error("Resposta do backend não veio em JSON: " + text);
-      }
-
-      if (!data?.id) {
-        throw new Error("Backend não retornou 'id'. Resposta: " + text);
-      }
-
-      setPlanId(data.id);
-      showToast("🔥 Plano gerado com sucesso");
-    } catch (err) {
-      console.error("❌ generatePlan erro:", err);
-      showToast("❌ Falha ao gerar plano: " + (err?.message || "erro desconhecido"));
+    showToast("🔥 Plano gerado com sucesso");
+  } catch (err) {
+    console.error(err);
+    showToast("❌ Falha ao gerar plano: " + (err?.message || "erro desconhecido"));
     }
   }
 
-  /* ================= LOADING ================= */
+  /* ================= LOADING (failsafe) ================= */
 
- if (loading && !bootStuck) {
-  return (
-    <div
-      style={{
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        height: "100vh",
-        color: "var(--muted)",
-      }}
-    >
-      Carregando...
-    </div>
-  );
-}
-
-if (loading && bootStuck) {
-
-  return (
-
-<div style={{ padding: 20 }}>
-      <h3>Backend demorou para responder</h3>
-      <p>Abra o backend para acordar e tente de novo:</p>
-      <p>
-        <a href="https://health-dashboard-4qxq.onrender.com/docs" target="_blank" rel="noreferrer">
-          Abrir /docs do backend
-        </a>
-      </p>
-      <button
-        type="button"
-        onClick={() => window.location.reload()}
-        style={{ background: "#00e5a0", padding: "10px", border: "none", cursor: "pointer" }}
+  if (loading && !bootStuck) {
+    return (
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          height: "100vh",
+          color: "var(--muted)",
+        }}
       >
-        Recarregar
-      </button>
+        Carregando...
+      </div>
+    );
+  }
+
+  if (loading && bootStuck) {
+    return (
+      <div style={{ padding: 20 }}>
+        <h3>Backend demorou para responder</h3>
+        <p>Abra o backend para acordar e tente de novo:</p>
+
+        <p>
+          <a
+            href="https://health-dashboard-4qxq.onrender.com/docs"
+            target="_blank"
+            rel="noreferrer"
+          >
+            Abrir /docs do backend
+          </a>
+        </p>
+
+        <button
+          type="button"
+          onClick={() => window.location.reload()}
+          style={{
+            background: "#00e5a0",
+            padding: "10px",
+            border: "none",
+            cursor: "pointer",
+          }}
+        >
+          Recarregar
+        </button>
+      </div>
+    );
+  }
+
+  /* ================= RENDER NORMAL ================= */
+
+  return (
+    <div className="layout">
+      <Sidebar activePage={page} onNavigate={setPage} onNewRecord={openNew} />
+
+      <main className="main-content">
+        {page === "dashboard" && (
+          <>
+            <Dashboard records={records} onNewRecord={openNew} />
+
+            {/* 🔥 BOTÕES DO PLANO */}
+            <div style={{ marginTop: "20px" }}>
+              <button
+                type="button"
+                onClick={generatePlan}
+                style={{
+                  background: "#00e5a0",
+                  padding: "10px",
+                  border: "none",
+                  cursor: "pointer",
+                }}
+              >
+                🚀 Gerar Plano de Treino e Alimentação
+              </button>
 
               {planId && (
                 <button
@@ -165,7 +184,9 @@ if (loading && bootStuck) {
                     border: "1px solid #00e5a0",
                     cursor: "pointer",
                   }}
-                  onClick={() => window.open(`${BACKEND}/plan/${planId}/pdf`, "_blank")}
+                  onClick={() =>
+                    window.open(`${BACKEND}/plan/${planId}/pdf`, "_blank")
+                  }
                 >
                   🔥 Ver Plano
                 </button>
