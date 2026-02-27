@@ -1,0 +1,63 @@
+.records__table-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+}
+
+.records__table-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--space-lg) 28px 20px;
+}
+
+.records__count {
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.records__table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.records__table thead tr {
+  border-bottom: 1px solid var(--border);
+}
+
+.records__table th {
+  text-align: left;
+  padding: 12px 20px;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--muted);
+}
+
+.records__table td {
+  padding: 14px 20px;
+  font-size: 14px;
+  border-bottom: 1px solid var(--border);
+}
+
+.records__table tbody tr {
+  transition: background var(--transition);
+}
+.records__table tbody tr:hover {
+  background: var(--surface2);
+}
+.records__table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.records__id {
+  color: var(--muted);
+  font-size: 12px !important;
+}
+
+.records__actions {
+  display: flex;
+  gap: var(--space-sm);
+}
