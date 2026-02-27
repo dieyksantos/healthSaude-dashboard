@@ -3,3 +3,7 @@ backend/venv/
 __pycache__/
 Env/
 backend/env/
+*.db
+*.pdf
+.vscode/
+*.db
