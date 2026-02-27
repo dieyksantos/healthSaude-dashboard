@@ -71,6 +71,7 @@ export default function App() {
   /* ================= PLANO IA ================= */
 
   async function generatePlan() {
+    console.log("🔥 generatePlan chamado"); 
   try {
     const res = await fetch("/plan/generate", { method: "POST" });
 
