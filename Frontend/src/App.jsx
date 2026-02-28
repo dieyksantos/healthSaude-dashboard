@@ -1,3 +1,5 @@
+
+import { BACKEND } from "./services/api";
 import { useState, useEffect } from "react";
 import { Sidebar } from "./components/Sidebar/Sidebar";
 import { Dashboard } from "./components/Dashboard/Dashboard";
@@ -6,6 +8,7 @@ import { Modal } from "./components/Modal/Modal";
 import { Toast, useToast } from "./components/Toast/Toast";
 import { useHealth } from "./hooks/useHealth";
 import "./styles/globals.css";
+
 
 export default function App() {
   const BACKEND = "https://health-dashboard-4qxq.onrender.com";

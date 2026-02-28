@@ -313,9 +313,13 @@ async def download_pdf(plan_id: int, db: Session = Depends(get_db)):
     if not plan:
         raise HTTPException(status_code=404, detail="Plano não encontrado.")
 
-    plan_data = json.loads(plan.content)
+    # segurança extra (se vier vazio/corrompido no banco)
+    try:
+        plan_data = json.loads(plan.content or "{}")
+    except Exception:
+        raise HTTPException(status_code=500, detail="Conteúdo do plano inválido (JSON).")
 
-    # Recarrega histórico (mantido caso queira usar no futuro)
+    # Recarrega histórico (se quiser usar no futuro)
     records_raw = db.query(Health).order_by(Health.date).all()
     records = [
         {
@@ -328,11 +332,23 @@ async def download_pdf(plan_id: int, db: Session = Depends(get_db)):
         for r in records_raw
     ]
 
+    # gera bytes do PDF
     pdf_bytes = _generate_pdf(plan_data, records)
+    if not pdf_bytes:
+        raise HTTPException(status_code=500, detail="PDF gerado vazio.")
+
     filename = f"plano-saude-{datetime.now().strftime('%Y%m%d')}.pdf"
 
+    # ✅ CRÍTICO: garantir ponteiro no início
+    pdf_buffer = io.BytesIO()
+    pdf_buffer.write(pdf_bytes)
+    pdf_buffer.seek(0)
+
     return StreamingResponse(
-        io.BytesIO(pdf_bytes),
+        pdf_buffer,
         media_type="application/pdf",
-        headers={"Content-Disposition": f"attachment; filename={filename}"},
+        headers={
+            "Content-Disposition": f'inline; filename="{filename}"',
+            "Cache-Control": "no-store",
+        },
     )
