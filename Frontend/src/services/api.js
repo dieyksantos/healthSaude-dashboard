@@ -1,10 +1,12 @@
-const BACKEND = "https://health-dashboard-4qxq.onrender.com";
-const TIMEOUT_MS = 12000;
+export const BACKEND = (
+  import.meta.env.VITE_BACKEND_URL || "https://health-dashboard-4qxq.onrender.com"
+).replace(/\/+$/, "");
+
+const TIMEOUT_MS = 30000;
 
 async function fetchWithTimeout(url, options = {}, timeoutMs = TIMEOUT_MS) {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), timeoutMs);
-
   try {
     return await fetch(url, { ...options, signal: controller.signal });
   } finally {
