@@ -148,7 +148,7 @@ npm run dev
 
 | Serviço | URL |
 |---------|-----|
-| 🖥️ Frontend (Vercel) | [saude-saude-dashboard.vercel.app](https://saude-saude-dashboard.vercel.app) |
+| 🖥️ Frontend (Vercel) | [saude-saude-dashboard.vercel.app](https://health-saude-dashboard.vercel.app) |
 | ⚙️ Backend (Render) | [health-dashboard-4qxq.onrender.com](https://health-dashboard-4qxq.onrender.com) |
 | 📚 API Docs | [health-dashboard-4qxq.onrender.com/docs](https://health-dashboard-4qxq.onrender.com/docs) |
 
