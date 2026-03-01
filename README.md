@@ -14,7 +14,7 @@
 
 <br/>
 
-**[🚀 Acessar o Projeto](https://saude-saude-dashboard.vercel.app)** · **[📡 API Docs](https://health-dashboard-4qxq.onrender.com/docs)** · **[🐛 Reportar Bug](https://github.com/dieyksantos/healthSaude-dashboard/issues)**
+**[🚀 Acessar o Projeto](https://health-saude-dashboard.vercel.app)** · **[📡 API Docs](https://health-dashboard-4qxq.onrender.com/docs)** · **[🐛 Reportar Bug](https://github.com/dieyksantos/healthSaude-dashboard/issues)**
 
 </div>
 
