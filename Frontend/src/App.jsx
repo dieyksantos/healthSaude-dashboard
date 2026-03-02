@@ -10,8 +10,8 @@ import { PlanPreview } from "./components/PlanPreview";
 import "./styles/globals.css";
 
 export default function App() {
- 
-  // ✅ mantém backend só para records (seu hook useHealth provavelmente usa isso)
+  // OBS: backend não é mais necessário para load/records se você está 100% local.
+  // Mantive só pra não quebrar nenhum link futuro, mas não é usado aqui.
   const BACKEND = "https://health-dashboard-4qxq.onrender.com";
 
   const [page, setPage] = useState("dashboard");
@@ -22,18 +22,13 @@ export default function App() {
   const [planData, setPlanData] = useState(null);
   const [planOpen, setPlanOpen] = useState(false);
 
-  const [bootStuck, setBootStuck] = useState(false);
-
   const { records, loading, isDemoMode, load, add, edit, remove } = useHealth();
   const { toast, showToast, dismissToast } = useToast();
 
+  // ✅ carrega 1 vez ao montar (localStorage)
   useEffect(() => {
     load();
-  }, [load]);
-
-  useEffect(() => {
-    const t = setTimeout(() => setBootStuck(true), 20000);
-    return () => clearTimeout(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
@@ -94,10 +89,9 @@ export default function App() {
         return;
       }
 
-      // pega o último registro (mais comum ser o mais recente)
       const last = records[records.length - 1];
 
-      // ajuste aqui depois que você confirmar os nomes reais no seu record
+      // ajuste quando você confirmar os nomes reais do seu record
       const pesoKg = Number(last?.peso || last?.weight || last?.pesoKg);
       const alturaM = Number(last?.altura || last?.height || last?.alturaM);
 
@@ -119,9 +113,9 @@ export default function App() {
     }
   }
 
-  /* ================= LOADING (failsafe) ================= */
+  /* ================= LOADING ================= */
 
- {
+  if (loading) {
     return (
       <div
         style={{
@@ -133,34 +127,6 @@ export default function App() {
         }}
       >
         Carregando...
-      </div>
-    );
-  }
-
-  if (loading && bootStuck) {
-    return (
-      <div style={{ padding: 20 }}>
-        <h3>Backend demorou para responder</h3>
-        <p>Abra o backend para acordar e tente de novo:</p>
-
-        <p>
-          <a href={`${BACKEND}/docs`} target="_blank" rel="noreferrer">
-            Abrir /docs do backend
-          </a>
-        </p>
-
-        <button
-          type="button"
-          onClick={() => window.location.reload()}
-          style={{
-            background: "#00e5a0",
-            padding: "10px",
-            border: "none",
-            cursor: "pointer",
-          }}
-        >
-          Recarregar
-        </button>
       </div>
     );
   }
@@ -230,10 +196,7 @@ export default function App() {
 
       {/* ✅ Preview do plano (FRONT) */}
       {planOpen && (
-        <PlanPreview
-          data={planData}
-          onClose={() => setPlanOpen(false)}
-        />
+        <PlanPreview data={planData} onClose={() => setPlanOpen(false)} />
       )}
 
       <Toast message={toast} onDismiss={dismissToast} />
