@@ -8,7 +8,6 @@ import { useHealth } from "./hooks/useHealth";
 import { gerarPlanoNoFront } from "./lib/planGenerator";
 import { PlanPreview } from "./components/PlanPreview";
 import "./styles/globals.css";
-import { gerarPlanoNoFront } from "./lib/planGenerator";
 
 export default function App() {
   // ✅ mantém backend só para records (seu hook useHealth provavelmente usa isso)
