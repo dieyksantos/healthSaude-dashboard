@@ -10,6 +10,7 @@ import { PlanPreview } from "./components/PlanPreview";
 import "./styles/globals.css";
 
 export default function App() {
+ 
   // ✅ mantém backend só para records (seu hook useHealth provavelmente usa isso)
   const BACKEND = "https://health-dashboard-4qxq.onrender.com";
 
@@ -120,7 +121,7 @@ export default function App() {
 
   /* ================= LOADING (failsafe) ================= */
 
-  if (loading && !bootStuck) {
+ {
     return (
       <div
         style={{

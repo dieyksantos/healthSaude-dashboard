@@ -1,73 +1,54 @@
-import { useState, useCallback } from "react";
-import { fetchRecords, createRecord, updateRecord, deleteRecord } from "../services/api";
-import { calcBMI, getBMICategory, DEMO_DATA } from "../utils/health";
+// src/hooks/useHealth.js
+import { useCallback, useMemo, useState } from "react";
+import {
+  loadRecords,
+  addRecord,
+  updateRecord,
+  deleteRecord,
+} from "../lib/localRecords";
 
 export function useHealth() {
-  const [records, setRecords]   = useState([]);
-  const [loading, setLoading]   = useState(false);
-  const [isDemoMode, setIsDemoMode] = useState(false);
+  const [records, setRecords] = useState([]);
+  const [loading, setLoading] = useState(false);
+
+  // como agora é tudo local, demo mode é false
+  const isDemoMode = useMemo(() => false, []);
 
   const load = useCallback(async () => {
-  console.log("🟡 load(): start");
-  setLoading(true);
-
-  try {
-    const data = await fetchRecords();
-    console.log("🟢 load(): ok", Array.isArray(data) ? data.length : data);
-    setRecords(data);
-    setIsDemoMode(false);
-  } catch (err) {
-    console.error("🔴 load(): fail", err);
-    setRecords(DEMO_DATA);
-    setIsDemoMode(true);
-  } finally {
-    console.log("🟣 load(): finally -> setLoading(false)");
-    setLoading(false);
-  }
-
-    
+    setLoading(true);
+    try {
+      const data = loadRecords();
+      setRecords(data);
+    } finally {
+      setLoading(false);
+    }
   }, []);
 
   const add = useCallback(async (formData) => {
-    const bmi      = calcBMI(formData.weight, formData.height);
-    const category = getBMICategory(bmi);
-
-    if (isDemoMode) {
-      setRecords((prev) => [
-        ...prev,
-        { id: Date.now(), ...formData, bmi, category },
-      ]);
-      return;
-    }
-
-    await createRecord(formData);
-    await load();
-  }, [isDemoMode, load]);
+    const newRecord = {
+      id: Date.now(),
+      ...formData,
+      createdAt: new Date().toISOString(),
+    };
+    addRecord(newRecord);
+    setRecords(loadRecords());
+    return newRecord;
+  }, []);
 
   const edit = useCallback(async (id, formData) => {
-    const bmi      = calcBMI(formData.weight, formData.height);
-    const category = getBMICategory(bmi);
-
-    if (isDemoMode) {
-      setRecords((prev) =>
-        prev.map((r) => (r.id === id ? { ...r, ...formData, bmi, category } : r))
-      );
-      return;
-    }
-
-    await updateRecord(id, formData);
-    await load();
-  }, [isDemoMode, load]);
+    const updated = updateRecord(id, {
+      ...formData,
+      updatedAt: new Date().toISOString(),
+    });
+    setRecords(loadRecords());
+    return updated;
+  }, []);
 
   const remove = useCallback(async (id) => {
-    if (isDemoMode) {
-      setRecords((prev) => prev.filter((r) => r.id !== id));
-      return;
-    }
-
-    await deleteRecord(id);
-    await load();
-  }, [isDemoMode, load]);
+    deleteRecord(id);
+    setRecords(loadRecords());
+    return true;
+  }, []);
 
   return { records, loading, isDemoMode, load, add, edit, remove };
 }
