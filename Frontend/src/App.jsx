@@ -1,5 +1,3 @@
-
-import { BACKEND } from "./services/api";
 import { useState, useEffect } from "react";
 import { Sidebar } from "./components/Sidebar/Sidebar";
 import { Dashboard } from "./components/Dashboard/Dashboard";
@@ -7,16 +5,22 @@ import { Records } from "./components/Records/Records";
 import { Modal } from "./components/Modal/Modal";
 import { Toast, useToast } from "./components/Toast/Toast";
 import { useHealth } from "./hooks/useHealth";
+import { gerarPlanoNoFront } from "./lib/planGenerator";
+import { PlanPreview } from "./components/PlanPreview";
 import "./styles/globals.css";
 
-
 export default function App() {
+  // ✅ mantém backend só para records (seu hook useHealth provavelmente usa isso)
   const BACKEND = "https://health-dashboard-4qxq.onrender.com";
 
   const [page, setPage] = useState("dashboard");
   const [modalOpen, setModalOpen] = useState(false);
   const [editing, setEditing] = useState(null);
+
   const [planId, setPlanId] = useState(null);
+  const [planData, setPlanData] = useState(null);
+  const [planOpen, setPlanOpen] = useState(false);
+
   const [bootStuck, setBootStuck] = useState(false);
 
   const { records, loading, isDemoMode, load, add, edit, remove } = useHealth();
@@ -78,25 +82,39 @@ export default function App() {
     }
   }
 
-  /* ================= PLANO IA ================= */
+  /* ================= PLANO (FRONT) ================= */
 
   async function generatePlan() {
     showToast("⏳ Gerando plano...");
 
     try {
-      const res = await fetch(`${BACKEND}/plan/generate`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({}),
-      });
+      if (!records || records.length === 0) {
+        showToast("❌ Para gerar plano, crie pelo menos 1 registro com peso e altura.");
+        return;
+      }
 
-      const data = JSON.parse(text);
-    setPlanId(data.id);
+      // pega o último registro (mais comum ser o mais recente)
+      const last = records[records.length - 1];
 
-    showToast("🔥 Plano gerado com sucesso");
-  } catch (err) {
-    console.error(err);
-    showToast("❌ Falha ao gerar plano: " + (err?.message || "erro desconhecido"));
+      // ajuste aqui depois que você confirmar os nomes reais no seu record
+      const pesoKg = Number(last?.peso || last?.weight || last?.pesoKg);
+      const alturaM = Number(last?.altura || last?.height || last?.alturaM);
+
+      if (!pesoKg || !alturaM) {
+        showToast("❌ Para gerar plano, o registro precisa ter peso e altura.");
+        return;
+      }
+
+      const data = gerarPlanoNoFront({ pesoKg, alturaM });
+
+      setPlanData(data);
+      setPlanId(data.id);
+      setPlanOpen(true);
+
+      showToast("🔥 Plano gerado com sucesso");
+    } catch (err) {
+      console.error(err);
+      showToast("❌ Falha ao gerar plano: " + (err?.message || "erro desconhecido"));
     }
   }
 
@@ -125,11 +143,7 @@ export default function App() {
         <p>Abra o backend para acordar e tente de novo:</p>
 
         <p>
-          <a
-            href="https://health-dashboard-4qxq.onrender.com/docs"
-            target="_blank"
-            rel="noreferrer"
-          >
+          <a href={`${BACKEND}/docs`} target="_blank" rel="noreferrer">
             Abrir /docs do backend
           </a>
         </p>
@@ -187,9 +201,7 @@ export default function App() {
                     border: "1px solid #00e5a0",
                     cursor: "pointer",
                   }}
-                  onClick={() =>
-                    window.open(`${BACKEND}/plan/${planId}/pdf`, "_blank")
-                  }
+                  onClick={() => setPlanOpen(true)}
                 >
                   🔥 Ver Plano
                 </button>
@@ -214,6 +226,14 @@ export default function App() {
         onClose={closeModal}
         onSave={handleSave}
       />
+
+      {/* ✅ Preview do plano (FRONT) */}
+      {planOpen && (
+        <PlanPreview
+          data={planData}
+          onClose={() => setPlanOpen(false)}
+        />
+      )}
 
       <Toast message={toast} onDismiss={dismissToast} />
     </div>
